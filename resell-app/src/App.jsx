@@ -60,7 +60,7 @@ function parsePasted(text) {
     const cost = parseMoney(r[4]);
     const adjustmentAmount = parseMoney(r[28]);
     return {
-      id: btoa(encodeURIComponent((r[1]?.trim()||"")+"||"+(r[2]?.trim()||"")+"||"+(r[6]?.trim()||"")+"||"+(r[8]?.trim()||"")+"||"+i)).replace(/[^a-zA-Z0-9]/g,"").slice(0,32),
+      id: (()=>{ try { return btoa(unescape(encodeURIComponent((r[1]?.trim()||"")+"||"+(r[2]?.trim()||"")+"||"+(r[6]?.trim()||"")+"||"+i))).replace(/[^a-zA-Z0-9]/g,"").slice(0,32); } catch(e) { return uid(); } })(),
       description:r[1]?.trim()||"", purchaseDate:r[2]?.trim()||"",
       purchaseLocation:r[3]?.trim()||"", cost, category:r[6]?.trim()||"",
       designation:r[8]?.trim()||"", itemType:r[11]?.trim()||"", notes:r[15]?.trim()||"",
@@ -241,16 +241,26 @@ export default function App() {
       const parsed = parsePasted(text);
       if(!parsed.length) { showToast("No data found — make sure you copied the full sheet","error"); return; }
       setItems(parsed);
-      showToast(`Parsed ${parsed.length} items, saving to database...`);
+      showToast(`Parsed ${parsed.length} items, saving...`);
       const dbRows = parsed.map(itemToDB);
+      // Delete all existing items first, then insert fresh
+      const { error: delError } = await supabase.from("items").delete().neq("id","__none__");
+      if(delError) { showToast("Clear error: "+delError.message,"error"); return; }
       const CHUNK = 50;
       for(let i=0;i<dbRows.length;i+=CHUNK) {
-        const { error } = await supabase.from("items").upsert(dbRows.slice(i,i+CHUNK), {onConflict:"id"});
-        if(error) { showToast("DB error: "+error.message,"error"); return; }
+        const { error } = await supabase.from("items").insert(dbRows.slice(i,i+CHUNK));
+        if(error) {
+          showToast("Save error: "+error.message,"error");
+          console.error("Insert error:", error, dbRows.slice(i,i+CHUNK)[0]);
+          return;
+        }
       }
-      showToast(`${parsed.length} items saved to database!`);
+      showToast(`${parsed.length} items saved!`);
       setShowPaste(false);
-    } catch(e) { showToast("Error: "+e.message,"error"); }
+    } catch(e) {
+      showToast("Error: "+e.message,"error");
+      console.error("handlePaste error:", e);
+    }
   }
 
   async function addItem(form) {
