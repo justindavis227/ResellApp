@@ -243,15 +243,13 @@ export default function App() {
       setItems(parsed);
       showToast(`Parsed ${parsed.length} items, saving...`);
       const dbRows = parsed.map(itemToDB);
-      // Delete all existing items first, then insert fresh
-      const { error: delError } = await supabase.from("items").delete().neq("id","__none__");
-      if(delError) { showToast("Clear error: "+delError.message,"error"); return; }
+      // Upsert in chunks — insert new, update existing by id
       const CHUNK = 50;
       for(let i=0;i<dbRows.length;i+=CHUNK) {
-        const { error } = await supabase.from("items").insert(dbRows.slice(i,i+CHUNK));
+        const { error } = await supabase.from("items").upsert(dbRows.slice(i,i+CHUNK));
         if(error) {
           showToast("Save error: "+error.message,"error");
-          console.error("Insert error:", error, dbRows.slice(i,i+CHUNK)[0]);
+          console.error("Upsert error:", error, dbRows.slice(i,i+CHUNK)[0]);
           return;
         }
       }
