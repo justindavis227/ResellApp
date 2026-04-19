@@ -40,7 +40,16 @@ function parsePasted(text) {
   const lines = text.trim().split("\n").filter(l=>l.trim());
   const dataLines = lines.filter(l => {
     const c = l.split("\t");
-    return c[1]&&c[1].trim()&&!c[1].includes("DO NOT")&&!c[1].includes("Key")&&!c[1].includes("Item Description");
+    if (!c[1] || !c[1].trim()) return false;
+    if (c[1].includes("DO NOT")) return false;
+    if (c[1].includes("Key")) return false;
+    if (c[1].includes("Item Description")) return false;
+    if (c[1].includes("Purchase Date")) return false;
+    if (c[1].includes("Sourced By")) return false;
+    if (c[1].includes("Date Listed")) return false;
+    // Skip rows with no description but with sold data (empty inventory rows)
+    if (c[1].trim() === "") return false;
+    return true;
   });
   return dataLines.map((line,i) => {
     const r = line.split("\t");
