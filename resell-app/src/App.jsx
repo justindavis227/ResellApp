@@ -41,14 +41,13 @@ function parsePasted(text) {
   const dataLines = lines.filter(l => {
     const c = l.split("\t");
     if (!c[1] || !c[1].trim()) return false;
-    if (c[1].includes("DO NOT")) return false;
-    if (c[1].includes("Key")) return false;
-    if (c[1].includes("Item Description")) return false;
-    if (c[1].includes("Purchase Date")) return false;
-    if (c[1].includes("Sourced By")) return false;
-    if (c[1].includes("Date Listed")) return false;
-    // Skip rows with no description but with sold data (empty inventory rows)
-    if (c[1].trim() === "") return false;
+    const v = c[1].trim();
+    if (v.includes("DO NOT")) return false;
+    if (v === "Key") return false;
+    if (v.includes("Item Description")) return false;
+    if (v.includes("Purchase Date")) return false;
+    if (v.includes("Sourced By")) return false;
+    if (v.includes("Date Listed")) return false;
     return true;
   });
   return dataLines.map((line,i) => {
