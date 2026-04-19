@@ -434,11 +434,11 @@ export default function App() {
   const BtnSmall=({children,onClick,color,bg,style={}})=>(
     <button onClick={onClick} style={{background:bg||T.accentBg,border:"none",color:color||T.accent,padding:"3px 9px",borderRadius:6,cursor:"pointer",fontSize:11,fontWeight:600,fontFamily:"inherit",...style}}>{children}</button>
   );
-  const StatCard=({label,value,sub,color,small})=>(
+  const StatCard=({label,value,sub,color,large})=>(
     <div style={{...card,padding:isMobile?"12px 14px":"16px 18px"}}>
-      <div style={{fontSize:isMobile?10:11,fontWeight:600,color:T.text3,textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:isMobile?4:8}}>{label}</div>
-      <div style={{fontSize:small?(isMobile?16:20):(isMobile?20:26),fontWeight:700,color:color||T.text,letterSpacing:"-0.02em",lineHeight:1.1,fontVariantNumeric:"tabular-nums"}}>{value}</div>
-      {sub&&<div style={{fontSize:11,color:T.text3,marginTop:4}}>{sub}</div>}
+      <div style={{fontSize:11,fontWeight:600,color:T.text3,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:6}}>{label}</div>
+      <div style={{fontSize:large?(isMobile?24:32):(isMobile?18:22),fontWeight:700,color:color||T.text,letterSpacing:"-0.02em",lineHeight:1.1,fontVariantNumeric:"tabular-nums"}}>{value}</div>
+      {sub&&<div style={{fontSize:11,color:T.text3,marginTop:5}}>{sub}</div>}
     </div>
   );
 
@@ -786,46 +786,29 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Row 1 */}
+              {/* Row 1 — Net Profit + Items Sold */}
               <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr 1fr":"repeat(2,1fr)",gap:isMobile?8:12}}>
-                <StatCard label="Net Profit" value={fmt(totalNetProfit)} color={T.green} sub={`${yearFilter} after all costs`}/>
-                <StatCard label="Items Sold" value={soldThisYear.length} sub={`${yearFilter}`}/>
+                <StatCard label="Net Profit" value={fmt(totalNetProfit)} color={totalNetProfit>=0?T.green:T.red} sub={`${yearFilter} after all costs`} large/>
+                <StatCard label="Items Sold" value={soldThisYear.length} sub={`${yearFilter}`} large/>
               </div>
 
-              {/* Row 2 */}
+              {/* Row 2 — Deductions */}
               <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr 1fr":"repeat(4,1fr)",gap:isMobile?8:12}}>
-                <StatCard label="Total Fees" value={fmt(totalFees)} color={T.amber} sub="platform + promoted" small/>
-                <StatCard label="Total Shipping" value={fmt(totalShipping)} color={T.amber} sub="all ship costs" small/>
-                <StatCard label="Mileage Deduction" value={fmt(mileageDeduction)} color={T.purple} sub={`${totalMiles.toFixed(1)} mi @ $${IRS_RATE}/mi`} small/>
-                <StatCard label="Unsold Capital" value={fmt(unsoldCapital)} color={T.red} sub={`${inventory.length} items in stock`} small/>
+                <StatCard label="Total Fees" value={fmt(totalFees)} color={T.red} sub="platform + promoted"/>
+                <StatCard label="Total Shipping" value={fmt(totalShipping)} color={T.red} sub="all ship costs"/>
+                <StatCard label="Mileage Total" value={fmt(mileageDeduction)} color={T.red} sub={`${totalMiles.toFixed(1)} mi @ $${IRS_RATE}/mi`}/>
+                <StatCard label="Unsold Total" value={fmt(unsoldCapital)} color={T.red} sub={`${inventory.length} items in stock`}/>
               </div>
 
-              {/* Row 3: Taxable Profit */}
+              {/* Row 3: Est. Taxable Profit */}
               <div style={{...card,padding:isMobile?14:20}}>{(()=>{
                 const taxable=totalNetProfit-totalFees-totalShipping-mileageDeduction-unsoldCapital;
                 return <>
-                  <div style={{fontSize:11,fontWeight:600,color:T.text3,textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:8}}>Est. Taxable Profit — {yearFilter}</div>
-                  <div style={{fontSize:isMobile?28:36,fontWeight:700,color:taxable>=0?T.green:T.red,letterSpacing:"-0.02em",lineHeight:1,marginBottom:8,fontVariantNumeric:"tabular-nums"}}>{fmt(taxable)}</div>
-                  <div style={{fontSize:12,color:T.text3}}>Net Profit − Fees − Shipping − Mileage Deduction − Unsold Capital</div>
+                  <div style={{fontSize:11,fontWeight:600,color:T.text3,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:8}}>Est. Taxable Profit — {yearFilter}</div>
+                  <div style={{fontSize:isMobile?30:40,fontWeight:700,color:taxable>=0?T.green:T.red,letterSpacing:"-0.02em",lineHeight:1,marginBottom:8,fontVariantNumeric:"tabular-nums"}}>{fmt(taxable)}</div>
+                  <div style={{fontSize:12,color:T.text3}}>Net Profit − Fees − Shipping − Mileage Total − Unsold Total</div>
                 </>;
               })()}</div>
-
-              {/* Tax summary */}
-              <div style={{...card,padding:isMobile?14:18,background:dark?"#1a1a2e":"#eff6ff",borderColor:dark?"#2a2a4a":"#bfdbfe"}}>
-                <div style={{fontSize:12,fontWeight:700,color:T.blue,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:10}}>Tax Summary — {yearFilter}</div>
-                <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr 1fr":"repeat(4,1fr)",gap:10}}>
-                  {[
-                    {label:"Cost of Goods Sold",value:fmt(soldThisYear.reduce((s,r)=>s+(r.cost||0),0))},
-                    {label:"Platform Fees",value:fmt(totalFees)},
-                    {label:"Shipping Costs",value:fmt(totalShipping)},
-                    {label:"Business Expenses",value:fmt(totalExpenses)},
-                    {label:"Mileage Write-off",value:fmt(mileageDeduction)},
-                    {label:"Total Deductions",value:fmt(totalFees+totalShipping+totalExpenses+mileageDeduction)},
-                    {label:"Gross Revenue",value:fmt(soldThisYear.reduce((s,r)=>s+(r.soldPrice||0),0))},
-                    {label:"Est. Taxable Income",value:fmt(soldThisYear.reduce((s,r)=>s+(r.soldPrice||0),0)-totalFees-totalShipping-totalExpenses-mileageDeduction)},
-                  ].map(s=><div key={s.label}><div style={{fontSize:11,color:T.text2,marginBottom:2}}>{s.label}</div><div style={{fontSize:15,fontWeight:700,fontVariantNumeric:"tabular-nums"}}>{s.value}</div></div>)}
-                </div>
-              </div>
 
               {/* Chart 1: Monthly */}
               <div style={{...card,padding:isMobile?14:18}}>
@@ -877,6 +860,46 @@ export default function App() {
                   )}
                 </div>
               </div>
+
+              {/* Tax Summary — collapsible, at bottom */}
+              {(()=>{
+                const TaxSummary = () => {
+                  const [open, setOpen] = useState(false);
+                  const taxRows=[
+                  {label:"Cost of Goods Sold",value:fmt(soldThisYear.reduce((s,r)=>s+(r.cost||0),0))},
+                  {label:"Gross Revenue",value:fmt(soldThisYear.reduce((s,r)=>s+(r.soldPrice||0),0))},
+                  {label:"Platform Fees",value:fmt(totalFees)},
+                  {label:"Shipping Costs",value:fmt(totalShipping)},
+                  {label:"Business Expenses",value:fmt(totalExpenses)},
+                  {label:"Mileage Write-off",value:fmt(mileageDeduction)},
+                  {label:"Total Deductions",value:fmt(totalFees+totalShipping+totalExpenses+mileageDeduction)},
+                  {label:"Est. Taxable Income",value:fmt(soldThisYear.reduce((s,r)=>s+(r.soldPrice||0),0)-totalFees-totalShipping-totalExpenses-mileageDeduction)},
+                ];
+                return (
+                  <div style={{...card,overflow:"hidden"}}>
+                    <button onClick={()=>setOpen(o=>!o)} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:isMobile?"14px 16px":"16px 20px",background:"none",border:"none",cursor:"pointer",fontFamily:"inherit"}}>
+                      <div style={{display:"flex",alignItems:"center",gap:10}}>
+                        <span style={{fontSize:13,fontWeight:700,color:T.text}}>Tax Summary — {yearFilter}</span>
+                      </div>
+                      <span style={{color:T.text3,fontSize:18,lineHeight:1,transform:open?"rotate(180deg)":"rotate(0deg)",transition:"transform .2s"}}>▾</span>
+                    </button>
+                    {open&&(
+                      <div style={{borderTop:`1px solid ${T.border}`,padding:isMobile?"14px 16px":"16px 20px"}}>
+                        <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr 1fr":"repeat(4,1fr)",gap:isMobile?12:16}}>
+                          {taxRows.map(s=>(
+                            <div key={s.label}>
+                              <div style={{fontSize:11,fontWeight:600,color:T.text3,textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:4}}>{s.label}</div>
+                              <div style={{fontSize:16,fontWeight:700,color:T.text,fontVariantNumeric:"tabular-nums"}}>{s.value}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+                };
+                return <TaxSummary/>;
+              })()}
 
               {/* Charts 4+5 */}
               <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"1fr 1fr",gap:isMobile?14:20}}>
