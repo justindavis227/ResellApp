@@ -60,7 +60,7 @@ function parsePasted(text) {
     const cost = parseMoney(r[4]);
     const adjustmentAmount = parseMoney(r[28]);
     return {
-      id: (()=>{ try { return btoa(unescape(encodeURIComponent((r[1]?.trim()||"")+"||"+(r[2]?.trim()||"")+"||"+(r[6]?.trim()||"")+"||"+i))).replace(/[^a-zA-Z0-9]/g,"").slice(0,32); } catch(e) { return uid(); } })(),
+      id: (()=>{ try { const s=(r[1]?.trim()||"")+(r[2]?.trim()||"")+(r[4]?.trim()||"")+(r[6]?.trim()||"")+(r[8]?.trim()||"")+i; let h=0; for(let c=0;c<s.length;c++){h=((h<<5)-h)+s.charCodeAt(c);h|=0;} return "item"+(Math.abs(h)).toString(36)+(i).toString(36); } catch(e) { return uid(); } })(),
       description:r[1]?.trim()||"", purchaseDate:r[2]?.trim()||"",
       purchaseLocation:r[3]?.trim()||"", cost, category:r[6]?.trim()||"",
       designation:r[8]?.trim()||"", itemType:r[11]?.trim()||"", notes:r[15]?.trim()||"",
